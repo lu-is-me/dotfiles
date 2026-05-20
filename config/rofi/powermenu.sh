@@ -6,16 +6,17 @@ selected=$(echo -e $entries | rofi -dmenu -i | awk '{print tolower($2)}')
 
 case $selected in
 logout)
-  hyprctl dispatch exit && uwsm stop
+  # hyprctl dispatch exit && uwsm stop
+  exec hyprshutdown
   # hyprctl dispatch exit
   ;;
 suspend)
   exec systemctl suspend
   ;;
 reboot)
-  exec systemctl reboot
+  exec hyprshutdown -t 'Restarting...' --post-cmd 'reboot'
   ;;
 shutdown)
-  exec systemctl poweroff
+  exec hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'
   ;;
 esac
