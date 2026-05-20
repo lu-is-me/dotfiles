@@ -4,7 +4,7 @@ hl.env("SDL_VIDEODRIVER", "wayland")
 
 -- Explicitly set XDG desktop session things
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
-hl.env("XDG_SESSION_TYPE", "wayland ") -- enables vaapi driver
+hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 
 -- hl.env("GTK_THEME", "Adwaita:dark")
@@ -20,11 +20,11 @@ hl.env("XCURSOR_THEME", "BreezeX-Black")
 -- env = XCURSOR_SIZE,24
 
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
-hl.env("QT_QPA_PLATFORMTHEME", "kde")
+-- hl.env("QT_QPA_PLATFORMTHEME", "kde")
 
 -- Electorn apps
 -- NOTE: This breaks some flatpak apps.
--- hl.env("ELECTRON_OZONE_PLATFORM_HINT","auto")
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
 -- NVIDIA
 -- env = WLR_DRM_DEVICES,/dev/dri/intel-igpu:/dev/dri/nvidia-gpu
