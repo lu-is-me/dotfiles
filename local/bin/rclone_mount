@@ -55,12 +55,26 @@ function mount_remote() {
   mkdir -p "$target_dir"
   echo "Mounting '$remote_name'..."
 
+  # rclone mount "$remote_name": "$target_dir" \
+  #   --vfs-cache-mode full \
+  #   --ignore-checksum \
+  #   --ignore-size \
+  #   --log-level ERROR \
+  #   --log-file "$log_file" \
+  #   --daemon
+  #
   rclone mount "$remote_name": "$target_dir" \
     --vfs-cache-mode full \
-    --ignore-checksum \
-    --ignore-size \
-    --log-level ERROR \
-    --log-file "$log_file" \
+    --vfs-cache-max-age 24h \
+    --vfs-cache-max-size 50G \
+    --dir-cache-time 5m \
+    --onedrive-delta \
+    --tpslimit 3 \
+    --tpslimit-burst 0 \
+    --no-modtime \
+    --vfs-read-chunk-size 64M \
+    --vfs-read-chunk-size-limit off \
+    --buffer-size 32M \
     --daemon
 
   sleep 2
