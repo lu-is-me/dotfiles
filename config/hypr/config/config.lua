@@ -80,7 +80,7 @@ hl.config({
 	},
 
 	cursor = {
-		no_hardware_cursors = 0, -- 0 enabled, 1: disabled, 2: auto
+		no_hardware_cursors = 2, -- 0 enabled, 1: disabled, 2: auto
 	},
 
 	render = {
