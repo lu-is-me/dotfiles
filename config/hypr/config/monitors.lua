@@ -45,3 +45,9 @@ hl.monitor({
 	position = "auto",
 	scale = "1",
 })
+
+-- on the portrait monitor split top layot on master
+hl.workspace_rule({
+	workspace = "m[desc:Dell Inc. DELL U2722DE 6TGK6P3]",
+	layout_opts = { orientation = "top" },
+})
