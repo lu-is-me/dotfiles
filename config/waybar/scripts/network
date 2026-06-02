@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Network status for waybar — shows primary connection icon, tooltip has all interfaces
+
+wifi_if=$(ip -brief link | awk '/^wlp/ && /UP/ {print $1; exit}')
+eth_if=$(ip -brief link | awk '/^enp/ && /UP/ {print $1; exit}')
+
+get_ip() { ip -brief addr show "$1" 2>/dev/null | awk '{print $3}' | head -1; }
+get_rx() { cat /sys/class/net/"$1"/statistics/rx_bytes 2>/dev/null; }
+get_tx() { cat /sys/class/net/"$1"/statistics/tx_bytes 2>/dev/null; }
+
+format_bytes() {
+  local b=$1
+  if   [ "$b" -ge 1073741824 ]; then printf "%.1fGB" "$(echo "scale=1; $b/1073741824" | bc)"
+  elif [ "$b" -ge 1048576 ];    then printf "%.1fMB" "$(echo "scale=1; $b/1048576" | bc)"
+  elif [ "$b" -ge 1024 ];       then printf "%.0fKB" "$(echo "scale=0; $b/1024" | bc)"
+  else printf "%dB" "$b"; fi
+}
+
+STATE_FILE="/tmp/waybar-network-state"
+NOW=$(date +%s%N)
+
+read_state() {
+  [ -f "$STATE_FILE" ] || return
+  local iface=$1
+  grep "^$iface " "$STATE_FILE" | read _ ts rx tx _ || true
+  echo "$ts $rx $tx"
+}
+
+speed() {
+  local iface=$1
+  local cur_rx cur_tx
+  cur_rx=$(get_rx "$iface"); cur_tx=$(get_tx "$iface")
+  local prev
+  prev=$(grep "^$iface " "$STATE_FILE" 2>/dev/null)
+  if [ -n "$prev" ]; then
+    local p_ts p_rx p_tx
+    read -r _ p_ts p_rx p_tx <<< "$prev"
+    local dt=$(( (NOW - p_ts) / 1000000 ))
+    [ "$dt" -gt 0 ] || { echo "⇣? ⇡?"; return; }
+    local drx=$(( (cur_rx - p_rx) * 1000 / dt ))
+    local dtx=$(( (cur_tx - p_tx) * 1000 / dt ))
+    echo "⇣$(format_bytes $drx)/s ⇡$(format_bytes $dtx)/s"
+  else
+    echo "⇣? ⇡?"
+  fi
+  # Update state
+  grep -v "^$iface " "$STATE_FILE" 2>/dev/null > "${STATE_FILE}.tmp" || true
+  echo "$iface $NOW $cur_rx $cur_tx" >> "${STATE_FILE}.tmp"
+  mv "${STATE_FILE}.tmp" "$STATE_FILE"
+}
+
+tooltip=""
+text=""
+css_class="disconnected"
+
+if [ -n "$wifi_if" ]; then
+  wifi_ip=$(get_ip "$wifi_if")
+  wifi_ssid=$(iw dev "$wifi_if" info 2>/dev/null | awk '/ssid/ {$1=""; sub(/^ /, ""); print}')
+  wifi_sig=$(iw dev "$wifi_if" link 2>/dev/null | awk '/signal/ {print $2, $3}')
+  wifi_spd=$(speed "$wifi_if")
+  tooltip+="󰤨  ${wifi_ssid:-unknown}\n"
+  tooltip+="   ${wifi_ip:-no ip}\n"
+  tooltip+="   ${wifi_sig}\n"
+  tooltip+="   ${wifi_spd}"
+  text="󰤨"
+  css_class="wifi"
+fi
+
+if [ -n "$eth_if" ]; then
+  eth_ip=$(get_ip "$eth_if")
+  eth_spd=$(speed "$eth_if")
+  [ -n "$tooltip" ] && tooltip+="\n\n"
+  tooltip+="󰀂  ${eth_if}\n"
+  tooltip+="   ${eth_ip:-no ip}\n"
+  tooltip+="   ${eth_spd}"
+  text="󰀂"
+  css_class="ethernet"
+fi
+
+[ -z "$text" ] && text="󰖪"
+
+tooltip_expanded=$(echo -e "$tooltip")
+jq -cn --arg text "$text" --arg tooltip "$tooltip_expanded" --arg class "$css_class" \
+  '{text: $text, tooltip: $tooltip, class: $class}'

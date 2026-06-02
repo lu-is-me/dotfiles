@@ -88,6 +88,7 @@ button:hover {
 #battery,
 #disk,
 #network,
+#custom-network,
 #pulseaudio,
 #wireplumber,
 #custom-media,
@@ -128,6 +129,14 @@ button:hover {
   color: @red;
 }
 
+#custom-nvid {
+  font-size: 18px;
+}
+
+#custom-nvid.suspended {
+  color: @overlay0;
+}
+
 #custom-nvid.active {
   color: @red;
 }
@@ -154,6 +163,13 @@ button:hover {
   color: @yellow;
 }
 #wireplumber.muted {
+  color: @text;
+}
+
+#pulseaudio {
+  color: @yellow;
+}
+#pulseaudio.muted {
   color: @text;
 }
 
@@ -200,7 +216,8 @@ button:hover {
   }
 }
 
-#network.disconnected {
+#network.disconnected,
+#custom-network.disconnected {
   background-color: @red;
 }
 
