@@ -42,7 +42,7 @@ hl.bind(
 )
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/fix_hw_cursor.sh"))
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/hypr/scripts/wallpaper_sw.sh"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/hypr/scripts/wallpaper.sh"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("~/.config/hypr/scripts/monitor-select"))
 
 -- Clipboard

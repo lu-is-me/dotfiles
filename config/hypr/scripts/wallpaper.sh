@@ -3,20 +3,22 @@ set -euo pipefail
 
 WALLPAPER_DIR="${HOME}/Pictures/wallpapers"
 STATE_LINK="${HOME}/.config/current_wallpaper"
-FIT_MODE="${FIT_MODE:-cover}" # contain|cover|tile|fill
+TRANSITION="${TRANSITION:-grow}" # fade|wipe|wave|grow|outer|random|none
+TRANSITION_DURATION="${TRANSITION_DURATION:-1}"
+TRANSITION_FPS="${TRANSITION_FPS:-60}"
 
-# Wait for hyprpaper to be ready (systemd managed or exec-once)
-echo "Waiting for hyprpaper to be ready..."
+# Wait for awww-daemon to be ready
+echo "Waiting for awww-daemon to be ready..."
 timeout_s=30
 for ((i = 0; i < timeout_s; i++)); do
-  if pgrep -x hyprpaper >/dev/null; then
+  if awww query &>/dev/null; then
     break
   fi
   sleep 1
 done
 
-if ! pgrep -x hyprpaper >/dev/null; then
-  echo "ERROR: hyprpaper is not running after ${timeout_s}s."
+if ! awww query &>/dev/null; then
+  echo "ERROR: awww-daemon is not running after ${timeout_s}s."
   exit 1
 fi
 
@@ -25,22 +27,20 @@ if [[ ! -d "${WALLPAPER_DIR}" ]]; then
   exit 1
 fi
 
-# Determine "current" wallpaper (prefer your own state link; it's unambiguous)
+# Determine current wallpaper from state link
 CURRENT_WALL=""
 if [[ -L "${STATE_LINK}" ]]; then
-  # readlink -f resolves to an absolute path if possible
   CURRENT_WALL="$(readlink -f "${STATE_LINK}" || true)"
 fi
 
-# Fallback: try to guess from hyprpaper's loaded list
+# Fallback: query awww for the currently loaded image
 if [[ -z "${CURRENT_WALL}" ]]; then
-  # listloaded output format can vary; extract the first absolute-ish path we see
-  CURRENT_WALL="$(hyprctl hyprpaper listloaded 2>/dev/null | tr -d '\r' | grep -Eo '(/[^ ]+\.(png|jpg|jpeg))' | head -n 1 || true)"
+  CURRENT_WALL="$(awww query 2>/dev/null | grep -Eo '(/[^ ]+\.(png|jpg|jpeg))' | head -n 1 || true)"
 fi
 
 echo -e "Current wallpaper:\n  ${CURRENT_WALL:-<unknown>}"
 
-# Pick a random wallpaper different from CURRENT_WALL (if we know it)
+# Pick a random wallpaper different from CURRENT_WALL
 if [[ -n "${CURRENT_WALL}" ]] && [[ -f "${CURRENT_WALL}" ]]; then
   WALLPAPER="$(
     find "${WALLPAPER_DIR}" -type f \
@@ -63,9 +63,10 @@ fi
 
 echo -e "New wallpaper:\n  ${WALLPAPER}"
 
-# New hyprpaper IPC syntax: '[mon], [path], [fit_mode]' (mon can be empty for fallback)
-# Example: ",/path/to/img.png,cover"
-hyprctl hyprpaper wallpaper ",${WALLPAPER},${FIT_MODE}" >/dev/null
+awww img "${WALLPAPER}" \
+  --transition-type "${TRANSITION}" \
+  --transition-duration "${TRANSITION_DURATION}" \
+  --transition-fps "${TRANSITION_FPS}"
 
-# Persist what we set (for next run + other scripts)
+# Persist for next run
 ln -sf "${WALLPAPER}" "${STATE_LINK}"
