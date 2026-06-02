@@ -14,8 +14,10 @@ hl.on("hyprland.start", function()
 		"bash -lc 'pgrep -xu \"$USER\" blueman-applet >/dev/null || blueman-applet &'",
 		-- Network manager applet (with duplicate guard)
 		"bash -lc 'pgrep -xu \"$USER\" nm-applet >/dev/null || nm-applet &'",
-		-- Waybar (launched via script/systemd)
+		-- Waybar (loop restarts on config.jsonc change; CSS reload is native)
 		os.getenv("HOME") .. "/.config/hypr/scripts/launch-waybar",
+		-- Blue light filter
+		"systemctl --user start hyprsunset.service",
 		-- Hardware cursor fix (delayed)
 		"sleep 10s && " .. os.getenv("HOME") .. "/.config/hypr/scripts/fix_hw_cursor.sh",
 		-- Polkit agent
