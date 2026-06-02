@@ -1,5 +1,7 @@
 hl.on("hyprland.start", function()
 	local cmds = {
+		-- Desktop portal, this should autostart but does not when not uwsm
+		"/usr/libexec/xdg-desktop-portal",
 		-- Notification daemon
 		"swaync",
 		-- Wallpaper daemon
