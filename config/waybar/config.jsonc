@@ -19,10 +19,9 @@
     "power-profiles-daemon",
     "idle_inhibitor",
     "bluetooth",
-    // "wireplumber",
     "wireplumber#source",
-    "wireplumber#sink",
-    "network",
+    "pulseaudio",
+    "custom/network",
     "group/hardware",
     "backlight",
     "hyprland/language",
@@ -281,16 +280,17 @@
     "interval": 10,
     "signal": 1
   },
-  "wireplumber#sink": {
+  "pulseaudio": {
     "format": "{volume}% {icon}",
+    "format-bluetooth": "󰂰 {volume}%",
+    "format-bluetooth-muted": "󰂰",
     "format-muted": "󰝟",
-    "format-icons": [
-      "󰕿",
-      "󰖀",
-      "󰕾"
-    ],
+    "format-icons": {
+      "headphone": "",
+      "default": ["󰖀", "󰕾", ""]
+    },
+    "tooltip-format": "{desc} — {volume}%",
     "on-click": "pavucontrol",
-    // "on-click": "flatpak run com.saivert.pwvucontrol",
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
     "scroll-step": 1
   },
