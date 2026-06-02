@@ -283,7 +283,7 @@
     "on-click-right": "$XDG_CONFIG_HOME/waybar/scripts/bluetooth-control",
     // "on-click": "$XDG_CONFIG_HOME/waybar/scripts/rofi-bluetooth",
     "on-click": "kitty --class bluetui bluetui",
-    "format-connected": "󰂰 {device_alias}",
+    "format-connected": "󰂰",
     "format": "{icon}",
     "interval": 0,
     "format-icons": {
