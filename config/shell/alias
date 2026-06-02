@@ -6,13 +6,17 @@ alias chad="NVIM_APPNAME=nvchad.nvim nvim"
 alias astro="NVIM_APPNAME=astro.nvim nvim"
 
 
-# Better ls with eza/exa
+# Better ls with eza
 if command -v eza >/dev/null 2>&1; then
   alias ls='eza --icons=auto'
+  alias ll='eza --icons=auto -la'
+  alias la='eza --icons=auto -a'
+  alias l='eza --icons=auto'
+else
+  alias ll='ls -alF'
+  alias la='ls -A'
+  alias l='ls'
 fi
-alias ll='ls -alF --color=auto'
-alias la='ls -A --color=auto'
-alias l='ls --color=auto'
 
 # Navigation
 alias ..='cd ..'
