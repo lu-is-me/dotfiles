@@ -129,12 +129,8 @@ button:hover {
   color: @red;
 }
 
-#custom-nvid {
-  font-size: 18px;
-}
-
 #custom-nvid.suspended {
-  color: @overlay0;
+    color: @text;
 }
 
 #custom-nvid.active {

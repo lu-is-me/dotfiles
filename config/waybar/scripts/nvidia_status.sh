@@ -4,7 +4,7 @@
 state=$(cat /sys/bus/pci/devices/0000:01:00.0/power/runtime_status 2>/dev/null)
 
 if grep -q "suspended" <<<"$state"; then
-  printf '{"text":"󰢮","class":"suspended"}'
+  printf '{"text":"GPU","class":"suspended"}'
 else
-  printf '{"text":"󰢮","class":"active"}'
+  printf '{"text":"GPU","class":"active"}'
 fi

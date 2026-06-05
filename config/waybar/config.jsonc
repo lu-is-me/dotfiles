@@ -237,7 +237,7 @@
     }
   },
   "custom/network": {
-    "exec": "$XDG_CONFIG_HOME/waybar/scripts/network",
+    "exec": "/home/luism/.config/waybar/scripts/network",
     "return-type": "json",
     "interval": 3,
     "on-click": "kitty --class nmtui nmtui",
@@ -264,7 +264,7 @@
     "input": true,
   },
   "custom/nvid": {
-    "exec": "$XDG_CONFIG_HOME/waybar/scripts/nvidia_status.sh",
+    "exec": "/home/luism/.config/waybar/scripts/nvidia_status.sh",
     "format": "{}",
     "return-type": "json",
     "interval": 10,
