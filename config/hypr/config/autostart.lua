@@ -15,7 +15,7 @@ hl.on("hyprland.start", function()
 		-- Network manager applet (with duplicate guard)
 		"bash -lc 'pgrep -xu \"$USER\" nm-applet >/dev/null || nm-applet &'",
 		-- Waybar (loop restarts on config.jsonc change; CSS reload is native)
-		os.getenv("HOME") .. "/.config/hypr/scripts/launch-waybar",
+		-- os.getenv("HOME") .. "/.config/hypr/scripts/launch-waybar",
 		-- Blue light filter
 		"systemctl --user start hyprsunset.service",
 		-- Hardware cursor fix (delayed)

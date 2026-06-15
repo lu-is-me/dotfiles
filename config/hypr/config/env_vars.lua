@@ -19,8 +19,13 @@ hl.env("XCURSOR_THEME", "BreezeX-Black")
 -- env = HYPRCURSOR_THEME,breeze_cursors
 -- env = XCURSOR_SIZE,24
 
-hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
--- hl.env("QT_QPA_PLATFORMTHEME", "kde")
+-- hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("QT_QPA_PLATFORMTHEME", "kde")
+
+-- NOTE: GDK_SCALE was a global XWayland-HiDPI workaround. It forces 2x on all
+-- GTK apps regardless of monitor, which is wrong on a mixed-scale multi-monitor
+-- setup. Run apps native-Wayland instead (they get correct per-monitor scaling).
+hl.env("XCURSOR_SIZE", "32")
 
 -- Electorn apps
 -- NOTE: This breaks some flatpak apps.

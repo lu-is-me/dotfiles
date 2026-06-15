@@ -2,8 +2,9 @@
 hl.monitor({
 	output = "desc:LG Display 0x06AA",
 	mode = "3840x2400@60.0",
+	-- mode = "highres",
 	position = "5120x1899",
-	scale = "2.0",
+	scale = "2",
 	bitdepth = 10,
 })
 
@@ -11,6 +12,7 @@ hl.monitor({
 hl.monitor({
 	output = "desc:Dell Inc. DELL U3421WE GLVW653",
 	mode = "3440x1440@59.97",
+	-- mode = "preferred",
 	position = "4587x459",
 	scale = "1",
 })
@@ -18,6 +20,7 @@ hl.monitor({
 hl.monitor({
 	output = "desc:Dell Inc. DELL U2722DE 6TGK6P3",
 	mode = "2560x1440@59.95",
+	-- mode = "highres",
 	position = "3147x0",
 	scale = "1",
 	transform = 3,

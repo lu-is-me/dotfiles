@@ -12,6 +12,7 @@ hl.config({
 			clickfinger_behavior = true,
 		},
 	},
+	xwayland = { force_zero_scaling = true },
 
 	general = {
 		gaps_in = 2,
@@ -80,7 +81,7 @@ hl.config({
 	},
 
 	cursor = {
-		no_hardware_cursors = 2, -- 0 enabled, 1: disabled, 2: auto
+		no_hardware_cursors = 1, -- 2: auto
 	},
 
 	render = {
