@@ -23,4 +23,6 @@ vim.g.snacks_animate = false
 vim.opt.wrap = true
 -- this prevents crashing with weird folds
 -- vim.opt.foldmethod = "manual"
---
+-- vim.g.root_spec = { { "uv.lock", ".git" }, "lsp", "cwd" }
+
+vim.g.root_lsp_ignore = { "copilot", "basedpyright", "pyright", "ruff" }
