@@ -1,6 +1,7 @@
 local terminal = "kitty"
 local fileManager = "dolphin"
 local mainMod = "SUPER"
+local noctalia_ipc = "qs -c noctalia-shell ipc call "
 
 local function launch_or_focus(pattern, cmd)
 	-- try class match first
@@ -22,8 +23,10 @@ local function launch_or_focus(pattern, cmd)
 end
 
 -- launcher (rofi)
-hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill rofi || rofi -show window"))
+hl.bind("ALT + space", hl.dsp.exec_cmd(noctalia_ipc .. "launcher toggle"))
+-- hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
+-- hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill rofi || rofi -show window"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(noctalia_ipc .. "launcher windows"))
 
 -- keybinds for application launch
 hl.bind(mainMod .. " + return", hl.dsp.exec_cmd(terminal))
@@ -41,8 +44,9 @@ hl.bind(
 	hl.dsp.exec_cmd("flatpak run --command=io.github.alainm23.planify.quick-add io.github.alainm23.planify")
 )
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/fix_hw_cursor.sh"))
-hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/hypr/scripts/wallpaper.sh"))
+-- hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
+-- hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/hypr/scripts/wallpaper.sh"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(noctalia_ipc .. "wallpaper random"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("~/.config/hypr/scripts/monitor-select"))
 
 -- Clipboard
@@ -54,8 +58,10 @@ hl.bind("SHIFT + Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/scree
 hl.bind("CTRL + Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/screenshot-cmd monitor"))
 
 -- Locking and session management
-hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/rofi/powermenu.sh"))
-hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd(noctalia_ipc .. "sessionMenu toggle"))
+hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(noctalia_ipc .. "lockScreen lock"))
+-- hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/rofi/powermenu.sh"))
+-- hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("hyprlock"))
 
 -- Window stuff
 hl.bind(mainMod .. " + space", hl.dsp.window.float({ action = "toggle" }))

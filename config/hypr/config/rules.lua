@@ -168,6 +168,13 @@ hl.layer_rule({
 	ignore_alpha = 0,
 })
 
+hl.layer_rule({
+	match = { namespace = "noctalia-background-.*$" },
+	ignore_alpha = 0.5,
+	blur = true,
+	blur_popups = true,
+})
+
 -- ── Commented out (kept for reference) ────────────────────────────────────────
 -- hl.window_rule({
 --     match            = { class = "^(xwaylandvideobridge)$" },

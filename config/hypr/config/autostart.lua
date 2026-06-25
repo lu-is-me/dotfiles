@@ -3,9 +3,10 @@ hl.on("hyprland.start", function()
 		-- Desktop portal, this should autostart but does not when not uwsm
 		"/usr/libexec/xdg-desktop-portal",
 		-- Notification daemon
-		"swaync",
+		-- "swaync",
 		-- Wallpaper daemon
 		"awww-daemon",
+		"quickshell -c noctalia-shell",
 		-- Idle daemon (with duplicate guard)
 		"bash -lc 'pgrep -xu \"$USER\" hypridle  >/dev/null || hypridle &'",
 		-- Nextcloud sync (with duplicate guard, delayed start)
