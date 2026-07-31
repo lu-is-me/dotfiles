@@ -8,7 +8,7 @@ hl.window_rule({
 
 hl.window_rule({
 	match = {
-		class = "(blueberry.py|wlctl|bluetui|Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|Omarchy|About|TUI.float)",
+		class = "(btop|blueberry.py|wlctl|bluetui|Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|Omarchy|About|TUI.float)",
 	},
 	tag = "+floating-window",
 })
@@ -52,6 +52,13 @@ hl.window_rule({
 hl.window_rule({
 	match = { class = "(?i)^.*(teams).*$" },
 	workspace = "9",
+})
+
+-- Screen share active window
+hl.window_rule({
+	match = { class = "(?i)^.*(teams).*$", title = "(?i).*(shared).*$" },
+	float = true,
+	size = { 1000, 500 },
 })
 
 hl.window_rule({
@@ -161,18 +168,18 @@ hl.window_rule({
 	no_focus = true,
 })
 
--- ── Layer rules ───────────────────────────────────────────────────────────────
-hl.layer_rule({
-	match = { namespace = "vicinae" },
-	blur = true,
-	ignore_alpha = 0,
-})
-
+-- Noctalia Settings
 hl.layer_rule({
 	match = { namespace = "noctalia-background-.*$" },
 	ignore_alpha = 0.5,
 	blur = true,
 	blur_popups = true,
+})
+
+hl.window_rule({
+	match = { class = "dev.noctalia.Noctalia" },
+	float = true,
+	size = { 1080, 920 },
 })
 
 -- ── Commented out (kept for reference) ────────────────────────────────────────

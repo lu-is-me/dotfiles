@@ -5,8 +5,9 @@ hl.on("hyprland.start", function()
 		-- Notification daemon
 		-- "swaync",
 		-- Wallpaper daemon
-		"awww-daemon",
-		"quickshell -c noctalia-shell",
+		-- "awww-daemon",
+		-- "quickshell -c noctalia-shell",
+		"noctalia",
 		-- Idle daemon (with duplicate guard)
 		"bash -lc 'pgrep -xu \"$USER\" hypridle  >/dev/null || hypridle &'",
 		-- Nextcloud sync (with duplicate guard, delayed start)

@@ -6,6 +6,7 @@ hl.monitor({
 	position = "5120x1899",
 	scale = "2",
 	bitdepth = 10,
+	vrr = 1,
 })
 
 -- Work monitors
