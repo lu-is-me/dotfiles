@@ -8,6 +8,10 @@ set -euo pipefail
 BASE_DIR="${HOME}/OST-OneDrive"
 LOG_DIR="${HOME}/.logs/rclone"
 LOCK_DIR="${BASE_DIR}/.locks" # one lock file per remote
+PID_DIR="${BASE_DIR}/.pids"  # one pid file per running daemon
+CACHE_VFS_DIR="${HOME}/.cache/rclone/vfs"
+CACHE_META_DIR="${HOME}/.cache/rclone/vfsMeta"
+LOG_ROTATE_MAX_BYTES=$((5 * 1024 * 1024)) # rotate mount logs past 5MB
 
 # ------------------------------------------------------------------
 # Ensure required binaries are present
@@ -22,7 +26,7 @@ done
 # ------------------------------------------------------------------
 # Prepare directories
 # ------------------------------------------------------------------
-mkdir -p "$BASE_DIR" "$LOG_DIR" "$LOCK_DIR"
+mkdir -p "$BASE_DIR" "$LOG_DIR" "$LOCK_DIR" "$PID_DIR"
 
 # ------------------------------------------------------------------
 # Gather the list of rclone remotes (strip the trailing colon)
@@ -80,12 +84,27 @@ choose_remote() {
 }
 
 # ------------------------------------------------------------------
+# Helper: rotate a mount log once it grows past LOG_ROTATE_MAX_BYTES
+# ------------------------------------------------------------------
+rotate_log_if_needed() {
+  local log_file="$1"
+  [[ -f "$log_file" ]] || return 0
+  local size
+  size=$(stat -c%s "$log_file" 2>/dev/null || echo 0)
+  if ((size > LOG_ROTATE_MAX_BYTES)); then
+    mv -f "$log_file" "${log_file}.1"
+    echo "Rotated oversized log ($((size / 1024 / 1024))MB): $log_file -> ${log_file}.1"
+  fi
+}
+
+# ------------------------------------------------------------------
 # Mount a single remote
 # ------------------------------------------------------------------
 mount_remote() {
   local remote_name="$1"
   local target_dir="${BASE_DIR}/${remote_name}"
   local lock_file="${LOCK_DIR}/${remote_name}.lock"
+  local pid_file="${PID_DIR}/${remote_name}.pid"
   local log_file="${LOG_DIR}/rclone_mount_${remote_name}.log"
 
   if mountpoint -q "$target_dir" 2>/dev/null; then
@@ -93,40 +112,60 @@ mount_remote() {
     return 0
   fi
 
-  # Prevent two simultaneous mount attempts
+  # Prevent two simultaneous mount attempts (a lock left behind by a
+  # crashed run is detected via its recorded pid and cleared automatically)
   if [[ -e "$lock_file" ]]; then
-    echo "Lock file exists for '$remote_name' – another mount may be in progress."
-    return 1
+    local lock_pid
+    lock_pid="$(cat "$lock_file" 2>/dev/null || true)"
+    if [[ -n "$lock_pid" ]] && kill -0 "$lock_pid" 2>/dev/null; then
+      echo "Lock file exists for '$remote_name' – another mount may be in progress (pid $lock_pid)."
+      return 1
+    fi
+    echo "Removing stale lock file for '$remote_name' (pid ${lock_pid:-unknown} not running)."
+    rm -f "$lock_file"
   fi
-  touch "$lock_file"
+  echo "$$" >"$lock_file"
 
   mkdir -p "$target_dir"
+  rotate_log_if_needed "$log_file"
   echo "Mounting '$remote_name' → $target_dir"
 
   # ------------------------------------------------------------------
   # Core rclone mount command – only the *non‑default* options are listed.
   # Feel free to add any of the optional ones (allow‑other, umask, uid/gid)
+  #
+  #   --exclude keeps ephemeral Office/LibreOffice lock files
+  #             (".~lock.*#") out of the vfs cache and off the remote
   # ------------------------------------------------------------------
-  rclone mount "${remote_name}:" "$target_dir" \
+  if ! rclone mount "${remote_name}:" "$target_dir" \
     --vfs-cache-mode full \
     --vfs-cache-max-age 24h \
     --vfs-cache-max-size 50G \
     --onedrive-delta \
-    --tpslimit 4 \
-    --tpslimit-burst 5 \
+    --tpslimit 10 \
+    --tpslimit-burst 20 \
     --ignore-size \
     --ignore-checksum \
+    --vfs-fast-fingerprint \
+    --dir-cache-time 1h \
     --vfs-read-chunk-size 64M \
+    --vfs-read-chunk-size-limit 2G \
     --vfs-read-ahead 2M \
+    --exclude ".~lock.*#" \
     --log-level INFO \
     --log-file "$log_file" \
-    --daemon
+    --daemon; then
+    echo "FAILED to mount '$remote_name' – rclone exited with an error, see $log_file for details."
+    rm -f "$lock_file"
+    return 1
+  fi
 
   # Give rclone a moment to spin up
   sleep 2
 
   if mountpoint -q "$target_dir" 2>/dev/null; then
     echo "Successfully mounted '$remote_name'."
+    pgrep -f "rclone mount ${remote_name}: ${target_dir} " | head -1 >"$pid_file" || true
     rm -f "$lock_file"
     return 0
   else
@@ -142,18 +181,69 @@ mount_remote() {
 unmount_remote() {
   local remote_name="$1"
   local target_dir="${BASE_DIR}/${remote_name}"
+  local pid_file="${PID_DIR}/${remote_name}.pid"
+
   if ! mountpoint -q "$target_dir" 2>/dev/null; then
     echo "Remote '$remote_name' is not mounted."
     return 0
   fi
   echo "Unmounting '$remote_name'..."
-  if fusermount -u "$target_dir" 2>/dev/null; then
-    echo "Successfully unmounted '$remote_name'."
-    return 0
-  else
+  if ! fusermount -u "$target_dir" 2>/dev/null; then
     echo "FAILED to unmount '$remote_name'."
     return 1
   fi
+
+  # fusermount only detaches the kernel mountpoint – the daemon process
+  # can keep running (and keep retrying/logging) for a while afterwards.
+  # Wait for it to exit on its own, then force it if it doesn't.
+  local daemon_pid=""
+  [[ -f "$pid_file" ]] && daemon_pid="$(cat "$pid_file" 2>/dev/null || true)"
+  if [[ -n "$daemon_pid" ]] && kill -0 "$daemon_pid" 2>/dev/null; then
+    local waited=0
+    while kill -0 "$daemon_pid" 2>/dev/null && ((waited < 10)); do
+      sleep 1
+      waited=$((waited + 1))
+    done
+    if kill -0 "$daemon_pid" 2>/dev/null; then
+      echo "Daemon pid $daemon_pid still running ${waited}s after unmount, forcing it to stop..."
+      kill "$daemon_pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$daemon_pid" 2>/dev/null || true
+    fi
+  fi
+  rm -f "$pid_file"
+
+  echo "Successfully unmounted '$remote_name'."
+  return 0
+}
+
+# ------------------------------------------------------------------
+# Unmount, discard any cached-but-unsynced changes, and remount a
+# remote. Use this when a file is stuck endlessly retrying a failed
+# upload (e.g. a dead/expired OneDrive upload session) even after a
+# plain restart, and the remote copy should just win.
+# ------------------------------------------------------------------
+clear_cache_remote() {
+  local remote_name="$1"
+
+  echo "This discards any locally cached changes for '$remote_name' that"
+  echo "haven't finished uploading yet — the remote version will win."
+  read -rp "Continue? [y/N] " confirm
+  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "Cancelled."
+    return 1
+  fi
+
+  if mountpoint -q "${BASE_DIR}/${remote_name}" 2>/dev/null; then
+    unmount_remote "$remote_name" || return 1
+  fi
+
+  echo "Clearing cache for '$remote_name'..."
+  find "$CACHE_VFS_DIR" "$CACHE_META_DIR" -maxdepth 1 \
+    \( -name "${remote_name}" -o -name "${remote_name}{*}" \) \
+    -exec rm -rf {} + 2>/dev/null || true
+
+  mount_remote "$remote_name"
 }
 
 # ------------------------------------------------------------------
@@ -169,6 +259,7 @@ while true; do
   echo "  [U] Unmount a remote"
   echo "  [A] Mount all remotes"
   echo "  [X] Unmount all remotes"
+  echo "  [C] Clear cache & remount a remote (fixes a stuck upload retry loop)"
   echo "  [Q] Quit"
   echo
   read -rp "Choose action: " action
@@ -194,6 +285,11 @@ while true; do
     for remote in "${REMOTES[@]}"; do
       unmount_remote "$remote"
     done
+    ;;
+  C)
+    if choose_remote; then
+      clear_cache_remote "$REMOTE_NAME"
+    fi
     ;;
   Q)
     echo "Good‑bye!"
