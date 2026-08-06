@@ -5,7 +5,7 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 -- fix for scaling since hypr update
-config.dpi = 96.0 * 4.0
+config.dpi = 96.0
 
 -- For example, changing the color scheme:
 config.color_scheme_dirs = { "/home/luism/.config/wezterm/colors" }
