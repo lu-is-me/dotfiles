@@ -3,15 +3,12 @@
 -- Add any additional options here
 vim.g.mapleader = " "
 
-vim.scriptencoding = "utf-8"
-vim.opt.encoding = "utf-8"
-vim.optfileencoding = "utf-8"
+vim.opt.fileencoding = "utf-8"
 
-vim.opt.number = true
+vim.opt.number = true -- line numbers
 
 vim.opt.title = true
 vim.opt.autoindent = true
-vim.opt.smartindent = true
 vim.opt.hlsearch = true
 vim.opt.scrolloff = 10
 vim.opt.showcmd = true
@@ -20,9 +17,14 @@ vim.opt.autowrite = true
 vim.opt.ignorecase = true
 
 vim.g.snacks_animate = false
+-- Line wrapping
 vim.opt.wrap = true
--- this prevents crashing with weird folds
--- vim.opt.foldmethod = "manual"
--- vim.g.root_spec = { { "uv.lock", ".git" }, "lsp", "cwd" }
+vim.opt.breakindent = true
+vim.opt.showbreak = "↳ " -- optional: visual marker on wrapped lines
 
+-- Auto root folder detection
+-- vim.g.root_spec = { { "uv.lock", ".git" }, "lsp", "cwd" }
 vim.g.root_lsp_ignore = { "copilot", "basedpyright", "pyright", "ruff" }
+
+vim.g.lazyvim_python_lsp = "pyrefly"
+-- vim.g.lazyvim_python_lsp = "basedpyright"
