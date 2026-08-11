@@ -40,7 +40,7 @@ hl.window_rule({
 })
 
 hl.window_rule({
-	match = { class = "^(md.Obsidian|Logseq)$" },
+	match = { class = "(?i)^.*(obsidian|logseq).*$" },
 	workspace = "7",
 })
 

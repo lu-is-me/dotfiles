@@ -37,7 +37,7 @@ alias venv="source .venv/bin/activate"
 
 
 # Safety nets
-alias cp="cp -I"
+# alias cp="cp -I"
 alias mv="mv -I"
 
 # Fedora-specific
