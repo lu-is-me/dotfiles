@@ -1,5 +1,5 @@
 # BEGIN_KITTY_THEME
-# Noctalia
+# Nordfox
 include current-theme.conf
 # END_KITTY_THEME
 # font_family       "Fira Code NerdFont mono"
@@ -7,7 +7,7 @@ include current-theme.conf
 # italic_font       auto
 # bold_italic_font  auto
 
-font_size 12
+font_size 11
 
 # BEGIN_KITTY_FONTS
 font_family      family="JetBrainsMono Nerd Font"
