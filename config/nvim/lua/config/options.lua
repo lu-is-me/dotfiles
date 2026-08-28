@@ -14,13 +14,10 @@ vim.opt.scrolloff = 10
 vim.opt.showcmd = true
 vim.opt.autowrite = true
 
-vim.opt.ignorecase = true
+vim.opt.ignorecase = true -- makes searche case insensitive
 
 vim.g.snacks_animate = false
--- Line wrapping
-vim.opt.wrap = true
-vim.opt.breakindent = true
-vim.opt.showbreak = "↳ " -- optional: visual marker on wrapped lines
+vim.g.ai_cmp = false -- remove ai completion from regular completion menu
 
 -- Auto root folder detection
 -- vim.g.root_spec = { { "uv.lock", ".git" }, "lsp", "cwd" }

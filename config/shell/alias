@@ -5,7 +5,6 @@ alias vk="NVIM_APPNAME=kickstart.nvim nvim"
 alias chad="NVIM_APPNAME=nvchad.nvim nvim"
 alias astro="NVIM_APPNAME=astro.nvim nvim"
 
-
 # Better ls with eza
 if command -v eza >/dev/null 2>&1; then
   alias ls='eza --icons=auto'
@@ -35,10 +34,10 @@ alias free="free -m"
 # Python venvs
 alias venv="source .venv/bin/activate"
 
-
 # Safety nets
 alias cp="cp -i"
-alias mv="mv -I"
+alias mv="mv -i"
+alias rm="rm -I"
 
 # Fedora-specific
 if [ -f "/etc/fedora-release" ]; then
