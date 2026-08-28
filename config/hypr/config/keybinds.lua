@@ -169,7 +169,7 @@ hl.define_submap("resize", function()
 
 	-- Use `reset` to go back to the global submap
 	hl.bind("escape", hl.dsp.submap("reset"))
-	-- hl.bind(mainMod .. " + R", hl.dsp.submap("reset"))
+	hl.bind(mainMod .. " + R", hl.dsp.submap("reset"))
 end)
 
 -- Laptop multimedia keys for volume and LCD brightness
