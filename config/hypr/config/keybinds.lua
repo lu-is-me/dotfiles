@@ -18,12 +18,14 @@ local ipc_cmds = {
 }
 
 -- Returns an hl.bind callback that dispatches `name`'s command for whichever backend is
--- currently running, checked fresh on every keypress. Falls back to quickshell if neither
--- is detected (e.g. right after a Hyprland reload, before autostart has launched the shell).
+-- currently running, checked fresh on every keypress. Falls back to the standalone noctalia
+-- daemon if neither is detected (e.g. right after a Hyprland reload, before autostart has
+-- launched the shell) -- `qs` here comes from noctalia-qs-legacy and is broken against
+-- current Qt, so it is never a safe fallback.
 local function noctalia_ipc(name)
 	local cmd = ipc_cmds[name]
 	return function()
-		local backend = util.shell_backend() or "quickshell"
+		local backend = util.shell_backend() or "noctalia"
 		local full_cmd
 		if backend == "noctalia" then
 			full_cmd = "noctalia msg " .. cmd.noctalia
