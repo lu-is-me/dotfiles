@@ -20,3 +20,19 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     -- E.reveal(event.buf)
   end,
 })
+
+-- Projekt-Woerterbuch: `zg` legt neue Woerter unter <git-root>/spell/de.utf-8.add ab,
+-- damit Fachbegriffe (ROS, Odometrie, ...) im Repo versioniert werden.
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("project_spellfile", { clear = true }),
+  pattern = { "typst", "markdown", "text", "plaintex", "tex" },
+  callback = function(event)
+    local root = vim.fs.root(event.buf, ".git")
+    if not root then
+      return
+    end
+    local dir = root .. "/spell"
+    vim.fn.mkdir(dir, "p")
+    vim.opt_local.spellfile = dir .. "/de.utf-8.add"
+  end,
+})
