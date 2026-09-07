@@ -8,8 +8,6 @@ hl.on("hyprland.start", function()
 		-- "awww-daemon",
 		-- "quickshell -c noctalia-shell",
 		"noctalia",
-		-- Idle daemon (with duplicate guard)
-		"bash -lc 'pgrep -xu \"$USER\" hypridle  >/dev/null || hypridle &'",
 		-- Nextcloud sync (with duplicate guard, delayed start)
 		"bash -lc 'pgrep -xu \"$USER\" nextcloud >/dev/null || nextcloud --background &'",
 		-- Bluetooth applet (with duplicate guard)
