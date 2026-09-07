@@ -183,7 +183,4 @@ _uv() {
   [[ ${words[2]} == run && ${words[CURRENT]} != -* ]] && _files
 }
 
-
-export INOVITAS_SAVE_FOLDER=/home/luism/projects/artemis/innovitas_data/
-export INOVITAS_AUTH_CONFIG_PATH=/home/luism/projects/artemis/innovitas_data/auth_client.json
 export PATH="$HOME/.local/bin:$PATH"
