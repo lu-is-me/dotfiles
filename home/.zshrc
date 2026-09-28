@@ -7,6 +7,10 @@
 # For perf measurmenent
 # zmodload zsh/zprof # at the top of the file
 
+# Escape a deleted cwd (e.g. a removed git worktree inherited from the tmux
+# server): PWD becomes "." and zsh-syntax-highlighting's path loop spins forever.
+[[ $PWD == /* && -d $PWD ]] || builtin cd ~
+
 # ==============================================================================
 # ZINIT INITIALIZATION
 # ==============================================================================
@@ -35,8 +39,8 @@ zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
 
-zinit ice wait"0" lucid
-zinit light zsh-users/zsh-syntax-highlighting
+# zinit ice wait"0" lucid
+# zinit light zsh-users/zsh-syntax-highlighting
 
 # Oh My Zsh plugins
 zinit snippet OMZP::command-not-found
@@ -135,8 +139,7 @@ command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
 # ==============================================================================
 # Source all my little special scripts
-for f in ~/.config/zsh/*.zsh; do source "$f"; done
-for f in ~/.config/zsh/*.bash; do source "$f"; done
+for f in ~/.config/zsh/*.zsh(N); do source "$f"; done
 
 # ==============================================================================
 # CACHED COMPLETIONS
@@ -173,6 +176,9 @@ if (( $+functions[_uv] )); then
     [[ ${words[2]} == run && ${words[CURRENT]} != -* ]] && _files
   }
 fi
+
+zinit light zsh-users/zsh-syntax-highlighting
+
 
 # For perf measurements
 # zprof
