@@ -1,39 +1,10 @@
-local util = require("config.util")
-
 local terminal = "kitty"
 local fileManager = "dolphin"
 local mainMod = "SUPER"
 
--- Noctalia-shell can run either hosted under quickshell (`qs ipc call <target> <function>`)
--- or as the standalone noctalia daemon (`noctalia msg <command>`) -- the two speak different
--- IPC vocabularies, so each action needs a command for both backends.
-local ipc_cmds = {
-	launcher_toggle = { qs = "launcher toggle", noctalia = "panel-toggle launcher" },
-	launcher_windows = { qs = "launcher windows", noctalia = "window-switcher" },
-	wallpaper_random = { qs = "wallpaper random", noctalia = "wallpaper-random" },
-	session_menu_toggle = { qs = "sessionMenu toggle", noctalia = "panel-toggle session" },
-	-- lockScreen.lock is the shell's preferred lock target under qs; "session lock" is
-	-- noctalia's own command for the same action.
-	session_lock = { qs = "lockScreen lock", noctalia = "session lock" },
-}
-
--- Returns an hl.bind callback that dispatches `name`'s command for whichever backend is
--- currently running, checked fresh on every keypress. Falls back to the standalone noctalia
--- daemon if neither is detected (e.g. right after a Hyprland reload, before autostart has
--- launched the shell) -- `qs` here comes from noctalia-qs-legacy and is broken against
--- current Qt, so it is never a safe fallback.
-local function noctalia_ipc(name)
-	local cmd = ipc_cmds[name]
-	return function()
-		local backend = util.shell_backend() or "noctalia"
-		local full_cmd
-		if backend == "noctalia" then
-			full_cmd = "noctalia msg " .. cmd.noctalia
-		else
-			full_cmd = "qs -c noctalia-shell ipc call " .. cmd.qs
-		end
-		hl.dispatch(hl.dsp.exec_cmd(full_cmd))
-	end
+-- Returns an hl.bind callback that sends `command` to the noctalia daemon over its IPC.
+local function noctalia_ipc(command)
+	return hl.dsp.exec_cmd("noctalia msg " .. command)
 end
 
 local function launch_or_focus(pattern, cmd)
@@ -56,10 +27,10 @@ local function launch_or_focus(pattern, cmd)
 end
 
 -- launcher (rofi)
-hl.bind("ALT + space", noctalia_ipc("launcher_toggle"))
--- hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
+-- hl.bind("ALT + SHIFT + space", noctalia_ipc("panel-toggle launcher"))
+hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
 -- hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill rofi || rofi -show window"))
-hl.bind(mainMod .. " + W", noctalia_ipc("launcher_windows"))
+hl.bind(mainMod .. " + W", noctalia_ipc("window-switcher"))
 
 -- keybinds for application launch
 hl.bind(mainMod .. " + return", hl.dsp.exec_cmd(terminal))
@@ -79,7 +50,7 @@ hl.bind(
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/fix_hw_cursor.sh"))
 -- hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
 -- hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/hypr/scripts/wallpaper.sh"))
-hl.bind(mainMod .. " + SHIFT + W", noctalia_ipc("wallpaper_random"))
+hl.bind(mainMod .. " + SHIFT + W", noctalia_ipc("wallpaper-random"))
 
 -- Clipboard
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
@@ -90,8 +61,8 @@ hl.bind("SHIFT + Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/scree
 hl.bind("CTRL + Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/screenshot-cmd monitor"))
 
 -- Locking and session management
-hl.bind(mainMod .. " + SHIFT + Escape", noctalia_ipc("session_menu_toggle"))
-hl.bind(mainMod .. " + Escape", noctalia_ipc("session_lock"))
+hl.bind(mainMod .. " + SHIFT + Escape", noctalia_ipc("panel-toggle session"))
+hl.bind(mainMod .. " + Escape", noctalia_ipc("session lock"))
 -- hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/rofi/powermenu.sh"))
 -- hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("hyprlock"))
 
