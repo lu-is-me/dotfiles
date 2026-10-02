@@ -6,7 +6,6 @@ hl.on("hyprland.start", function()
 		-- "swaync",
 		-- Wallpaper daemon
 		-- "awww-daemon",
-		-- "quickshell -c noctalia-shell",
 		"noctalia",
 		-- Nextcloud sync (with duplicate guard, delayed start)
 		"bash -lc 'pgrep -xu \"$USER\" nextcloud >/dev/null || nextcloud --background &'",

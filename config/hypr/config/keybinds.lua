@@ -27,8 +27,8 @@ local function launch_or_focus(pattern, cmd)
 end
 
 -- launcher (rofi)
--- hl.bind("ALT + SHIFT + space", noctalia_ipc("panel-toggle launcher"))
-hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
+hl.bind("ALT + space", noctalia_ipc("panel-toggle launcher"))
+-- hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
 -- hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill rofi || rofi -show window"))
 hl.bind(mainMod .. " + W", noctalia_ipc("window-switcher"))
 
