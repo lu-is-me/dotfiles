@@ -33,6 +33,13 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
 -- NVIDIA
 -- env = WLR_DRM_DEVICES,/dev/dri/intel-igpu:/dev/dri/nvidia-gpu
+-- NOTE: this is the form the Hyprland wiki prescribes, but on this SDDM-launched
+-- session it did NOT affect GPU selection -- aquamarine enumerates DRM devices while
+-- the backend initialises, before the Lua config runs, and picked card0 (NVIDIA).
+-- The value that actually decides lives in ~/.zprofile, which SDDM's wayland-session
+-- sources before exec'ing start-hyprland. (The wiki gives the same advice to uwsm
+-- users via ~/.config/uwsm/env-hyprland.) Kept here for child processes and to keep
+-- the two in sync; see SUSPEND-FUSE.md (Incident 2).
 hl.env("AQ_DRM_DEVICES", "/dev/dri/intel-igpu:/dev/dri/nvidia-gpu")
 
 -- NOTE: These were reccomended settings by hyper but fuck things up on my end
