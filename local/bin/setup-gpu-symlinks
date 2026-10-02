@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# Creates stable /dev/dri symlinks so AQ_DRM_DEVICES keeps pointing at the right
+# cards across reboots. The link names here are load-bearing: home/.zprofile and
+# config/hypr/config/env_vars.lua name intel-igpu and nvidia-gpu, and Hyprland picks
+# the NVIDIA card as primary if intel-igpu is missing -- which kills the external
+# monitors on resume. See SUSPEND-FUSE.md (Incident 2). Rename nothing here without
+# updating both of those files.
+#
+# Supersedes create_gpu_udev, which wrote two rule files, detected GPUs by grepping
+# lspci output for vendor names, and never reloaded udev (so it needed a reboot).
 set -euo pipefail
 
 RULE_PATH="/etc/udev/rules.d/90-gpu-dev-path.rules"
@@ -29,14 +38,14 @@ UDEV_RULES='# Stable symlinks for Intel/NVIDIA DRM nodes (card + render)
 
 if [[ -n "${INTEL_PCI:-}" ]]; then
   UDEV_RULES+=$'\n'"# Intel iGPU"
-  UDEV_RULES+=$'\n'"KERNEL==\"card*\",    SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"0000:${INTEL_PCI}\",  SYMLINK+=\"dri/intel-igpu\""
-  UDEV_RULES+=$'\n'"KERNEL==\"renderD*\", SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"0000:${INTEL_PCI}\",  SYMLINK+=\"dri/intel-igpu-render\""
+  UDEV_RULES+=$'\n'"KERNEL==\"card*\",    SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"${INTEL_PCI}\",  SYMLINK+=\"dri/intel-igpu\""
+  UDEV_RULES+=$'\n'"KERNEL==\"renderD*\", SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"${INTEL_PCI}\",  SYMLINK+=\"dri/intel-igpu-render\""
 fi
 
 if [[ -n "${NVIDIA_PCI:-}" ]]; then
   UDEV_RULES+=$'\n'"# NVIDIA dGPU"
-  UDEV_RULES+=$'\n'"KERNEL==\"card*\",    SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"0000:${NVIDIA_PCI}\", SYMLINK+=\"dri/nvidia-dgpu\""
-  UDEV_RULES+=$'\n'"KERNEL==\"renderD*\", SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"0000:${NVIDIA_PCI}\", SYMLINK+=\"dri/nvidia-dgpu-render\""
+  UDEV_RULES+=$'\n'"KERNEL==\"card*\",    SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"${NVIDIA_PCI}\", SYMLINK+=\"dri/nvidia-gpu\""
+  UDEV_RULES+=$'\n'"KERNEL==\"renderD*\", SUBSYSTEM==\"drm\", SUBSYSTEMS==\"pci\", KERNELS==\"${NVIDIA_PCI}\", SYMLINK+=\"dri/nvidia-gpu-render\""
 fi
 
 echo "Writing rules to $RULE_PATH (sudo required)…"
