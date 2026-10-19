@@ -19,14 +19,13 @@ elif command -v batcat >/dev/null 2>&1; then
   export MANPAGER="batcat -l man -p"
 fi
 
-# ---------- GPG ----------
-export GPG_TTY=$(tty)
-
 # ---------- Starship ----------
 export STARSHIP_CONFIG="$ZDOTDIR/starship.toml"
 
 # ---------- PATH ----------
+typeset -U path fpath  # drop duplicate PATH/FPATH entries
 # Personal binaries/scripts
-export PATH="$HOME/.local/bin:$PATH"
+path=("$HOME/.local/bin" $path)
 
-
+# ---------- Rust ----------
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"

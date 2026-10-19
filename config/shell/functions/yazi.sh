@@ -1,5 +1,9 @@
-function y() {
-  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+# Shared by bash and zsh.
+
+# Run yazi and cd into the directory it was in on exit
+y() {
+  local tmp cwd
+  tmp="$(mktemp -t "yazi-cwd.XXXXXX")" || return 1
   yazi "$@" --cwd-file="$tmp"
   if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
     builtin cd -- "$cwd"

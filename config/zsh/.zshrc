@@ -12,7 +12,6 @@ HISTFILE="$XDG_STATE_HOME/zsh/history"
 HISTSIZE=100000
 SAVEHIST=100000
 
-setopt APPEND_HISTORY
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
@@ -27,7 +26,8 @@ setopt INTERACTIVE_COMMENTS # Allow for comments
 setopt NUMERIC_GLOB_SORT # sort file 10 after file9 not file1
 
 # Escape a deleted cwd (e.g. a removed git worktree inherited from the tmux
-# server): PWD becomes "." and zsh-syntax-highlighting's path loop spins forever.
+# server): PWD becomes "." and the syntax highlighter's path loop (F-Sy-H, a
+# zsh-syntax-highlighting fork) spins forever.
 [[ $PWD == /* && -d $PWD ]] || builtin cd ~
 
 # ==============================================================================
@@ -42,27 +42,19 @@ source "${ZINIT_HOME}/zinit.zsh"
 
 unalias zi 2>/dev/null  # free up zi (zinit) for zoxide
 
-# Environment variables live in ~/.zshenv
-typeset -U path fpath  # drop duplicate PATH/FPATH entries
-path=("$HOME/.local/bin" $path)
+# PATH lives in .zshenv
+export GPG_TTY=$TTY  # interactive only; $TTY avoids spawning tty(1)
 
 # Load my aliases
 [ -f "$XDG_CONFIG_HOME/shell/alias" ] && source "$XDG_CONFIG_HOME/shell/alias"
 
 # ==============================================================================
-# ZSH PLUGINS
+# PLUGINS: COMPLETION SOURCES
 # ==============================================================================
-# Syntax highlighting, completions, and suggestions
+# Everything that adds to fpath must load before compinit
 
 zinit ice blockf
 zinit light zsh-users/zsh-completions # Additional completion definitions for zsh
-zinit light zsh-users/zsh-autosuggestions # Suggest commands as you type based on history and completions
-zinit light Aloxaf/fzf-tab # FZF-powered tab completion
-zinit light z-shell/F-Sy-H # Feature rich syntax highlighting
-zinit snippet OMZL::async_prompt.zsh # Non-blocking git status in prompt
-
-# zinit ice wait"0" lucid
-# zinit light zsh-users/zsh-syntax-highlighting
 
 # Oh My Zsh plugins
 zinit snippet OMZP::docker
@@ -76,15 +68,26 @@ zinit ice as"command" from"gh-r" \
           atpull"%atclone" src"init.zsh"
 zinit light starship/starship
 
+# ==============================================================================
+# COMPLETION SYSTEM
+# ==============================================================================
+source "$ZDOTDIR/autocompletion.zsh"
 
 # ==============================================================================
-# FZF INITIALIZATION
+# PLUGINS: WIDGETS
 # ==============================================================================
-command -v fzf > /dev/null && eval "$(fzf --zsh)"
+# fzf-tab must come after compinit, but before plugins that wrap widgets
+zinit light Aloxaf/fzf-tab # FZF-powered tab completion
+zinit light zsh-users/zsh-autosuggestions # Suggest commands as you type based on history and completions
+zinit light z-shell/F-Sy-H # Feature rich syntax highlighting
 
 # ==============================================================================
 # SHELL INTEGRATIONS
 # ==============================================================================
+
+# fzf - my settings first, then the official keybindings/completion
+source "$ZDOTDIR/fzf.zsh"
+command -v fzf >/dev/null && eval "$(fzf --zsh)"
 
 # zoxide - replaces cd, must be loaded immediately
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
@@ -93,11 +96,10 @@ command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 [ "$TERM" = "xterm-kitty" ] && command -v kitten >/dev/null && alias ssh="kitten ssh"
 
 # ==============================================================================
-# Source all my little special scripts
-# for f in ~/.config/zsh/*.zsh(N); do source "$f"; done
+# KEYBINDINGS & HELPERS
+# ==============================================================================
+source "$ZDOTDIR/keybinds.zsh"  # after fzf --zsh so my binds win
 
-
-source "$ZDOTDIR/autocompletion.zsh"
-source "$ZDOTDIR/keybinds.zsh"
-# source "$ZDOTDIR/fzf.zsh"
-
+# Shell-agnostic helper functions, shared with bash
+for f in "$XDG_CONFIG_HOME"/shell/functions/*.sh(N); do source "$f"; done
+unset f
