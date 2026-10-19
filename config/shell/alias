@@ -5,12 +5,15 @@ alias vk="NVIM_APPNAME=kickstart.nvim nvim"
 alias chad="NVIM_APPNAME=nvchad.nvim nvim"
 alias astro="NVIM_APPNAME=astro.nvim nvim"
 
+_eza_params=('--git' '--icons=auto')
+
 # Better ls with eza
 if command -v eza >/dev/null 2>&1; then
-  alias ls='eza --icons=auto'
-  alias ll='eza --icons=auto -la'
-  alias la='eza --icons=auto -a'
-  alias l='eza --icons=auto'
+  alias ls='eza ${_eza_params[*]}'
+  alias ll='eza ${_eza_params[*]} -la'
+  alias la='eza ${_eza_params[*]} -a'
+  alias lx='eza ${_eza_params[*]} -lbhHigUmuSa '
+  alias l='eza ${_eza_params[*]}'
 else
   alias ll='ls -alF'
   alias la='ls -A'
