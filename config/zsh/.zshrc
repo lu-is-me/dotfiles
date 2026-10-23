@@ -85,9 +85,8 @@ zinit light z-shell/F-Sy-H # Feature rich syntax highlighting
 # SHELL INTEGRATIONS
 # ==============================================================================
 
-# fzf - my settings first, then the official keybindings/completion
+# fzf - my settings plus the official keybindings/completion
 source "$ZDOTDIR/fzf.zsh"
-command -v fzf >/dev/null && eval "$(fzf --zsh)"
 
 # zoxide - replaces cd, must be loaded immediately
 command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
