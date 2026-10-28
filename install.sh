@@ -48,6 +48,26 @@ mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/zsh" "${XDG_CACHE_HOME:-$HOME/.c
 echo "  created state/cache dirs"
 
 echo ""
+echo "[theme]"
+# Light apps, dark shell (Noctalia themes itself). libadwaita/GTK4/browsers follow the
+# portal's color-scheme, which xdg-desktop-portal-gtk reads from gsettings; Qt apps
+# (QT_QPA_PLATFORMTHEME=kde) read kdeglobals. kdeglobals isn't linked because KDE
+# rewrites it wholesale, so only the scheme key is pinned here.
+if command -v gsettings >/dev/null 2>&1; then
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+    gsettings set org.gnome.desktop.interface gtk-theme 'Breeze'
+    echo "  gsettings: prefer-light, Breeze"
+else
+    echo "  SKIP gsettings (not found)"
+fi
+if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeLight
+    echo "  kdeglobals: ColorScheme=BreezeLight"
+else
+    echo "  SKIP kdeglobals (kwriteconfig6 not found)"
+fi
+
+echo ""
 echo "[tmux plugins]"
 # tmux.conf ends with `run '~/.config/tmux/plugins/tpm/tpm'`, which fails silently if
 # tpm is absent. The plugins are gitignored (tpm owns them), so bootstrap it here and
