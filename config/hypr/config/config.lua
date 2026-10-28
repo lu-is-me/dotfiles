@@ -31,24 +31,18 @@ hl.config({
 	},
 
 	decoration = {
-		rounding = 0,
-		rounding_power = 0,
-		active_opacity = 1.0,
+		-- rounding = 5,
 		inactive_opacity = 0.95,
-		fullscreen_opacity = 1.0,
 		blur = {
-			enabled = true,
-			size = 3,
-			passes = 1,
-			xray = false,
-			popups = true,
-			popups_ignorealpha = 0.2,
+			-- enabled = true,
+			-- size = 3,
+			-- popups = true,
 		},
 		shadow = {
 			enabled = true,
-			render_power = 3,
+			-- render_power = 3,
 			color = "rgba(1a1a1aee)",
-			range = 2,
+			range = 4,
 		},
 	},
 
@@ -78,11 +72,11 @@ hl.config({
 		enable_swallow = false,
 		swallow_regex = "^(Alacritty|kitty|wezterm)$",
 		focus_on_activate = true,
-		anr_missed_pings = 50,
+		anr_missed_pings = 20,
 	},
 
 	cursor = {
-		no_hardware_cursors = 1, -- 2: auto
+		no_hardware_cursors = 2, -- 2: auto
 	},
 
 	render = {
