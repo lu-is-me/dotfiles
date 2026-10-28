@@ -10,3 +10,6 @@ data
 
 # Tmux plugins
 config/tmux/plugins*
+
+# zsh completion dump
+config/zsh/.zcompdump*

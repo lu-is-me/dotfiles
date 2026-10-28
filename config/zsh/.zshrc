@@ -1,0 +1,104 @@
+#  _  | \   / |  Luis Meier
+# | | |  \_/  |  https://github.com/luismeier
+# | | | |\_/| |  https://luismeier.ch
+# | |_|_|_  |_|
+# |_______|
+
+# ==============================================================================
+# HISTORY CONFIGURATION
+# ==============================================================================
+HISTORY_IGNORE="(ls|cd|pwd|exit|sudo reboot|history|cd -|cd ..)"
+HISTFILE="$XDG_STATE_HOME/zsh/history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_FIND_NO_DUPS
+
+setopt GLOBDOTS
+setopt AUTOCD
+# setopt CORRECT # Enable spelling correction
+setopt EXTENDED_GLOB
+setopt INTERACTIVE_COMMENTS # Allow for comments
+setopt NUMERIC_GLOB_SORT # sort file 10 after file9 not file1
+
+# Escape a deleted cwd (e.g. a removed git worktree inherited from the tmux
+# server): PWD becomes "." and the syntax highlighter's path loop (F-Sy-H, a
+# zsh-syntax-highlighting fork) spins forever.
+[[ $PWD == /* && -d $PWD ]] || builtin cd ~
+
+# ==============================================================================
+# ZINIT INITIALIZATION
+# ==============================================================================
+
+# Set the directory we want to store zinit and plugins, download if not available
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
+[ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+source "${ZINIT_HOME}/zinit.zsh"
+
+unalias zi 2>/dev/null  # free up zi (zinit) for zoxide
+
+# PATH lives in .zshenv
+export GPG_TTY=$TTY  # interactive only; $TTY avoids spawning tty(1)
+
+# Load my aliases
+[ -f "$XDG_CONFIG_HOME/shell/alias" ] && source "$XDG_CONFIG_HOME/shell/alias"
+
+# ==============================================================================
+# PLUGINS: COMPLETION SOURCES
+# ==============================================================================
+# Everything that adds to fpath must load before compinit
+
+zinit ice blockf
+zinit light zsh-users/zsh-completions # Additional completion definitions for zsh
+
+# Oh My Zsh plugins
+zinit snippet OMZP::docker
+zinit snippet OMZP::docker-compose
+zinit snippet OMZP::sudo # press escape twice to run last command with sudo
+zinit snippet OMZP::direnv # autoload direnv integration
+
+# Starship prompt
+zinit ice as"command" from"gh-r" \
+          atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
+          atpull"%atclone" src"init.zsh"
+zinit light starship/starship
+
+# ==============================================================================
+# COMPLETION SYSTEM
+# ==============================================================================
+source "$ZDOTDIR/autocompletion.zsh"
+
+# ==============================================================================
+# PLUGINS: WIDGETS
+# ==============================================================================
+# fzf-tab must come after compinit, but before plugins that wrap widgets
+zinit light Aloxaf/fzf-tab # FZF-powered tab completion
+zinit light zsh-users/zsh-autosuggestions # Suggest commands as you type based on history and completions
+zinit light z-shell/F-Sy-H # Feature rich syntax highlighting
+
+# ==============================================================================
+# SHELL INTEGRATIONS
+# ==============================================================================
+
+# fzf - my settings plus the official keybindings/completion
+source "$ZDOTDIR/fzf.zsh"
+
+# zoxide - replaces cd, must be loaded immediately
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
+
+# Kitty fixes
+[ "$TERM" = "xterm-kitty" ] && command -v kitten >/dev/null && alias ssh="kitten ssh"
+
+# ==============================================================================
+# KEYBINDINGS & HELPERS
+# ==============================================================================
+source "$ZDOTDIR/keybinds.zsh"  # after fzf --zsh so my binds win
+
+# Shell-agnostic helper functions, shared with bash
+for f in "$XDG_CONFIG_HOME"/shell/functions/*.sh(N); do source "$f"; done
+unset f
