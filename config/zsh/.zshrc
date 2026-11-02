@@ -93,7 +93,6 @@ command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
 # Kitty fixes
 [ "$TERM" = "xterm-kitty" ] && command -v kitten >/dev/null && alias ssh="kitten ssh"
-
 # ==============================================================================
 # KEYBINDINGS & HELPERS
 # ==============================================================================

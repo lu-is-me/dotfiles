@@ -1,21 +1,12 @@
-# ==============================================================================
-# ENVIRONMENT VARIABLES
-# ==============================================================================
-# Read by every zsh (login, interactive, scripts), so keep this to exports only.
-# TERM is deliberately not set here: the terminal emulator owns it.
+# ~/.zshenv - bootstrap only.
+#
+# zsh reads this before anything else (after /etc/zshenv). Its only job is to point
+# ZDOTDIR at the real config; zsh then reads .zprofile/.zshrc/.zlogin from there.
+# zsh does NOT re-read $ZDOTDIR/.zshenv after ZDOTDIR changes, so source it here.
+#
+# Tools that inject themselves via ZDOTDIR (kitty shell integration, VS Code) skip this
+# file, restore ZDOTDIR themselves and source $ZDOTDIR/.zshenv directly. That works
+# because nothing in /etc/zshenv overwrites ZDOTDIR any more.
 
-export EDITOR="nvim"
-export VISUAL="nvim"
-export MANPAGER="nvim -c 'Man!'"
-export BROWSER="firefox"
-
-# follow XDG base dir specification
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_CACHE_HOME="$HOME/.cache"
-
-export FZF_DEFAULT_OPTS="--info=default --header-first --layout=reverse"
-export FZF_CTRL_R_OPTS="--style minimal --color 16 --info inline --no-sort --no-preview" # separate opts for history widget
-
-# Rust toolchain
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+export ZDOTDIR="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
+[[ -r "$ZDOTDIR/.zshenv" ]] && source "$ZDOTDIR/.zshenv"
