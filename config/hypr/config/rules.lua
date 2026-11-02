@@ -61,6 +61,13 @@ hl.window_rule({
 	size = { 1000, 500 },
 })
 
+-- xdph screen-share picker: otherwise spawns at global 0,0 (off-screen on home layout)
+hl.window_rule({
+	match = { class = "^(hyprland-share-picker)$" },
+	float = true,
+	center = true,
+})
+
 hl.window_rule({
 	match = { class = "(?i)^.*(spotify|tidal|signal).*$" },
 	workspace = "10",
@@ -168,27 +175,16 @@ hl.window_rule({
 	no_focus = true,
 })
 
--- Noctalia Settings
-hl.layer_rule({
-	match = { namespace = "noctalia-background-.*$" },
-	ignore_alpha = 0.5,
-	blur = true,
-	blur_popups = true,
-})
-
-hl.window_rule({
-	match = { class = "dev.noctalia.Noctalia" },
-	float = true,
-	size = { 1080, 920 },
-})
-
--- ── Commented out (kept for reference) ────────────────────────────────────────
 -- hl.window_rule({
---     match            = { class = "^(xwaylandvideobridge)$" },
---     opacity          = "0.0 override",
---     no_anim          = true,
---     no_initial_focus = true,
---     max_size         = { 1, 1 },
---     no_blur          = true,
---     no_focus         = true,
+-- 	name = "xwayland-video-bridge-fixes",
+-- 	match = {
+-- 		class = "xwaylandvideobridge",
+-- 	},
+--
+-- 	no_initial_focus = true,
+-- 	no_focus = true,
+-- 	no_anim = true,
+-- 	no_blur = true,
+-- 	max_size = { 1, 1 },
+-- 	opacity = 0.0,
 -- })
