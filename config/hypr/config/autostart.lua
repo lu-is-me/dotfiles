@@ -6,6 +6,8 @@ hl.on("hyprland.start", function()
 		-- "swaync",
 		-- Wallpaper daemon
 		-- "awww-daemon",
+		-- Idle daemon: dim/lock/screen-off/suspend (with duplicate guard)
+		"bash -lc 'pgrep -xu \"$USER\" hypridle >/dev/null || hypridle &'",
 		-- Nextcloud sync (with duplicate guard, delayed start)
 		"bash -lc 'pgrep -xu \"$USER\" nextcloud >/dev/null || nextcloud --background &'",
 		-- Bluetooth applet (with duplicate guard)
