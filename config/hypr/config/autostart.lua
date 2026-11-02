@@ -6,7 +6,6 @@ hl.on("hyprland.start", function()
 		-- "swaync",
 		-- Wallpaper daemon
 		-- "awww-daemon",
-		"noctalia",
 		-- Nextcloud sync (with duplicate guard, delayed start)
 		"bash -lc 'pgrep -xu \"$USER\" nextcloud >/dev/null || nextcloud --background &'",
 		-- Bluetooth applet (with duplicate guard)
@@ -15,21 +14,16 @@ hl.on("hyprland.start", function()
 		"bash -lc 'pgrep -xu \"$USER\" nm-applet >/dev/null || nm-applet &'",
 		-- Waybar (loop restarts on config.jsonc change; CSS reload is native)
 		-- os.getenv("HOME") .. "/.config/hypr/scripts/launch-waybar",
-		-- Blue light filter
-		"systemctl --user start hyprsunset.service",
 		-- Hardware cursor fix (delayed)
 		"sleep 10s && " .. os.getenv("HOME") .. "/.config/hypr/scripts/fix_hw_cursor.sh",
 		-- Polkit agent
 		"systemctl --user start hyprpolkitagent",
 		-- KWallet initialization
 		"/usr/libexec/pam_kwallet_init",
-		-- Clipboard manager
-		"wl-paste --type text --watch cliphist store",
-		"wl-paste --type image --watch cliphist store",
-		-- GTK settings
-		"gsettings set org.gnome.desktop.interface color-scheme prefer-dark",
+		-- GTK settings (color-scheme/gtk-theme are owned by dux; don't set them here)
 		"gsettings set org.gtk.Settings.FileChooser startup-mode cwd",
 		"gsettings set org.gtk.gtk4.Settings.FileChooser startup-mode cwd",
+		-- "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP",
 	}
 
 	for i = 1, #cmds do

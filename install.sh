@@ -49,23 +49,20 @@ echo "  created state/cache dirs"
 
 echo ""
 echo "[theme]"
-# Light apps, dark shell (Noctalia themes itself). libadwaita/GTK4/browsers follow the
-# portal's color-scheme, which xdg-desktop-portal-gtk reads from gsettings; Qt apps
-# (QT_QPA_PLATFORMTHEME=kde) read kdeglobals. kdeglobals isn't linked because KDE
-# rewrites it wholesale, so only the scheme key is pinned here.
-if command -v gsettings >/dev/null 2>&1; then
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-    gsettings set org.gnome.desktop.interface gtk-theme 'Breeze'
-    echo "  gsettings: prefer-light, Breeze"
-else
-    echo "  SKIP gsettings (not found)"
+# dux (dms) owns app theming: it switches gsettings gtk-theme between adw-gtk3/adw-gtk3-dark
+# and color-scheme with its light/dark mode, and generates the DankMatugen KDE colour scheme
+# that Qt apps read via QT_QPA_PLATFORMTHEME=kde. Only point kdeglobals at that scheme here;
+# kdeglobals isn't linked because KDE rewrites it wholesale.
+if ! ls /usr/share/themes/adw-gtk3 ~/.local/share/themes/adw-gtk3 >/dev/null 2>&1; then
+    echo "  WARN adw-gtk3 not installed (dnf install adw-gtk3-theme) -- dux GTK theming needs it"
 fi
 if command -v kwriteconfig6 >/dev/null 2>&1; then
-    kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeLight
-    echo "  kdeglobals: ColorScheme=BreezeLight"
+    kwriteconfig6 --file kdeglobals --group General --key ColorScheme DankMatugen
+    echo "  kdeglobals: ColorScheme=DankMatugen"
 else
     echo "  SKIP kdeglobals (kwriteconfig6 not found)"
 fi
+echo "  then: dux Settings -> Theme -> Apps -> Apply GTK / Apply Qt (once)"
 
 echo ""
 echo "[tmux plugins]"
