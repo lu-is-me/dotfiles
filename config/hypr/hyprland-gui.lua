@@ -5,6 +5,9 @@ hl.config({
     decoration = {
         dim_strength = 0.5,
     },
+    general = {
+        gaps_out = 4,
+    },
     misc = {
         animate_mouse_windowdragging = false,
         disable_hyprland_logo = false,

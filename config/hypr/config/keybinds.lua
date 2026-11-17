@@ -16,21 +16,12 @@ local function launch_or_focus(pattern, cmd)
 		return
 	end
 
-	-- try title match
-	-- w = hl.get_window("title:" .. pattern)
-	-- if w ~= nil then
-	-- 	hl.dispatch(hl.dsp.focus({ window = w }))
-	-- 	return
-	-- end
-
 	-- no match, launch
 	hl.dispatch(hl.dsp.exec_cmd(cmd))
 end
 
 -- launcher
 hl.bind("ALT + space", dms_ipc("launcher toggle"))
--- hl.bind("ALT + space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
--- hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("pkill rofi || rofi -show window"))
 hl.bind(mainMod .. " + W", dms_ipc("hypr toggleOverview"))
 
 -- keybinds for application launch
@@ -49,13 +40,10 @@ hl.bind(
 	hl.dsp.exec_cmd("flatpak run --command=io.github.alainm23.planify.quick-add io.github.alainm23.planify")
 )
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/fix_hw_cursor.sh"))
--- hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
--- hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/hypr/scripts/wallpaper.sh"))
 hl.bind(mainMod .. " + SHIFT + W", dms_ipc("wallpaper next"))
 
 -- Clipboard
 hl.bind(mainMod .. " + V", dms_ipc("clipboard toggle"))
--- hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
 
 -- Screenshots
 hl.bind("Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/screenshot-cmd"))
@@ -65,20 +53,52 @@ hl.bind("CTRL + Print", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/screen
 -- Locking and session management
 hl.bind(mainMod .. " + SHIFT + Escape", dms_ipc("powermenu toggle"))
 hl.bind(mainMod .. " + Escape", dms_ipc("lock lock"))
--- hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd(os.getenv("XDG_CONFIG_HOME") .. "/rofi/powermenu.sh"))
--- hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("hyprlock"))
 
 -- Window stuff
 hl.bind(mainMod .. " + space", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + CTRL + Q", hl.dsp.window.kill())
+
+-- Toggle the active workspace's layout and report the result
+local next_layout = { scrolling = "master", master = "scrolling" }
+
+hl.bind(mainMod .. " + TAB", function()
+	local workspace = hl.get_active_workspace()
+	if workspace == nil or workspace.id == nil then
+		return
+	end
+
+	local layout = next_layout[workspace.tiled_layout] or "scrolling"
+	hl.workspace_rule({ workspace = tostring(workspace.id), layout = layout })
+	hl.dispatch(
+		hl.dsp.exec_cmd(
+			"notify-send -a Hyprland -t 1500 -h string:x-canonical-private-synchronous:hypr-layout 'Layout' '"
+				.. layout
+				.. "'"
+		)
+	)
+end)
+
+hl.bind(mainMod .. " + BackSpace", hl.dsp.focus({ workspace = "previous" }))
 
 -- Master layout
 hl.bind(mainMod .. " + T", hl.dsp.layout("swapwithmaster"))
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.layout("orientationcycle left top right"))
 hl.bind(mainMod .. " + CTRL + T", hl.dsp.layout("orientationleft"))
+
+-- scroll layout
+hl.bind(mainMod .. " + SHIFT + U", hl.dsp.layout("colresize -conf"))
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout("colresize +conf"))
+hl.bind(mainMod .. " + U", hl.dsp.layout("swapcol l"))
+hl.bind(mainMod .. " + I", hl.dsp.layout("swapcol r"))
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.layout("fit all"))
+hl.bind(mainMod .. " + comma", hl.dsp.layout("fit expand"))
+hl.bind(mainMod .. " + period", hl.dsp.layout("center"))
+
+-- Toggle the visibility of the keybinds overlay and notifications overlay
+hl.bind(mainMod .. " + SHIFT + B", dms_ipc("hypr toggleBinds"))
+hl.bind(mainMod .. " + SHIFT + N", dms_ipc("notifications toggle"))
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
@@ -90,11 +110,30 @@ end
 
 -- Directional dict to loop thorugh
 local dirs = {
-	{ arrow = "left", vim = "h", dir = "l" },
-	{ arrow = "right", vim = "l", dir = "r" },
+	{ arrow = "left", vim = "h", dir = "l", column = "prev", workspace = "m-1" },
+	{ arrow = "right", vim = "l", dir = "r", column = "next", workspace = "m+1" },
 	{ arrow = "down", vim = "j", dir = "d" },
 	{ arrow = "up", vim = "k", dir = "u" },
 }
+
+local function in_scrolling_column(window)
+	return window ~= nil
+		and not window.floating
+		and window.workspace ~= nil
+		and window.workspace.tiled_layout == "scrolling"
+end
+
+-- Scrolling layout: move the active window into the adjacent column, or out into a new one.
+-- Anything else (other layouts, floating windows): plain directional window move.
+local function column_or_move(column, direction)
+	return function()
+		if in_scrolling_column(hl.get_active_window()) then
+			hl.dispatch(hl.dsp.layout("consume_or_expel " .. column))
+		else
+			hl.dispatch(hl.dsp.window.move({ direction = direction }))
+		end
+	end
+end
 
 -- looping through arrow and vim keys so everything is set
 for _, d in ipairs(dirs) do
@@ -105,13 +144,15 @@ for _, d in ipairs(dirs) do
 	hl.bind(mainMod .. " + CTRL + " .. d.arrow, hl.dsp.workspace.move({ monitor = d.dir }))
 	hl.bind(mainMod .. " + CTRL + " .. d.vim, hl.dsp.workspace.move({ monitor = d.dir }))
 	-- move window
-	hl.bind(mainMod .. " + SHIFT + " .. d.arrow, hl.dsp.window.move({ direction = d.dir }))
-	hl.bind(mainMod .. " + SHIFT + " .. d.vim, hl.dsp.window.move({ direction = d.dir }))
+	local move_window = d.column and column_or_move(d.column, d.dir) or hl.dsp.window.move({ direction = d.dir })
+	hl.bind(mainMod .. " + SHIFT + " .. d.arrow, move_window)
+	hl.bind(mainMod .. " + SHIFT + " .. d.vim, move_window)
+	-- previous/next workspace on monitor
+	if d.workspace then
+		hl.bind(mainMod .. " + ALT + " .. d.arrow, hl.dsp.focus({ workspace = d.workspace }))
+		hl.bind(mainMod .. " + ALT + " .. d.vim, hl.dsp.focus({ workspace = d.workspace }))
+	end
 end
-
--- next workspace on monitor
-hl.bind(mainMod .. " + SHIFT + right", hl.dsp.focus({ workspace = "m+1" }))
-hl.bind(mainMod .. " + SHIFT + left", hl.dsp.focus({ workspace = "m-1" }))
 
 -- special workspace (scratchpad)
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))
@@ -160,12 +201,12 @@ hl.bind(
 hl.bind(
 	"XF86AudioMute",
 	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
-	{ locked = true, repeating = true }
+	{ locked = true, repeating = false }
 )
 hl.bind(
 	"XF86AudioMicMute",
 	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
-	{ locked = true, repeating = true }
+	{ locked = true, repeating = false }
 )
 
 -- Monitor brightness
