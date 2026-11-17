@@ -49,22 +49,38 @@ echo "  created state/cache dirs"
 
 echo ""
 echo "[theme]"
-# Light apps, dark shell (Noctalia themes itself). libadwaita/GTK4/browsers follow the
-# portal's color-scheme, which xdg-desktop-portal-gtk reads from gsettings; Qt apps
-# (QT_QPA_PLATFORMTHEME=kde) read kdeglobals. kdeglobals isn't linked because KDE
-# rewrites it wholesale, so only the scheme key is pinned here.
-if command -v gsettings >/dev/null 2>&1; then
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-    gsettings set org.gnome.desktop.interface gtk-theme 'Breeze'
-    echo "  gsettings: prefer-light, Breeze"
+# Split theming: the dux (dms) shell runs dark, applications run light.
+# dux's "sync mode with portal" must be OFF (Settings -> Theme -> Apps), otherwise it pushes its
+# dark mode into gsettings color-scheme. Set it over IPC: the running shell rewrites
+# settings.json from memory, so editing the file directly gets reverted.
+# dux still generates DankMatugenLight from the wallpaper, but it also applies DankMatugen<mode>
+# to kdeglobals on every regeneration; kde-apps-light.path (systemd/user) switches it back.
+# Qt apps read kdeglobals via QT_QPA_PLATFORMTHEME=kde. kdeglobals isn't linked because KDE
+# rewrites it wholesale, so only select the scheme here.
+if command -v dms >/dev/null 2>&1 && dms ipc call settings set syncModeWithPortal false >/dev/null 2>&1; then
+    echo "  dms: syncModeWithPortal=false"
 else
-    echo "  SKIP gsettings (not found)"
+    echo "  SKIP dms portal sync (shell not running) -- turn it off in dux Settings -> Theme -> Apps"
 fi
-if command -v kwriteconfig6 >/dev/null 2>&1; then
-    kwriteconfig6 --file kdeglobals --group General --key ColorScheme BreezeLight
-    echo "  kdeglobals: ColorScheme=BreezeLight"
+if command -v gsettings >/dev/null 2>&1; then
+    gsettings set org.gnome.desktop.interface color-scheme prefer-light
+    echo "  gsettings: color-scheme=prefer-light"
+fi
+if "$DOTFILES_DIR/local/bin/kde-apps-light" 2>&1 | sed 's/^/  /'; then
+    :
+elif command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig6 --file kdeglobals --group General --key ColorScheme DankMatugenLight
+    echo "  kdeglobals: ColorScheme=DankMatugenLight"
 else
-    echo "  SKIP kdeglobals (kwriteconfig6 not found)"
+    echo "  SKIP kdeglobals (kde-apps-light failed and kwriteconfig6 not found)"
+fi
+for src in "$DOTFILES_DIR/systemd/user"/*; do
+    link "$src" "$HOME/.config/systemd/user/$(basename "$src")"
+done
+if systemctl --user daemon-reload 2>/dev/null && systemctl --user enable --now kde-apps-light.path >/dev/null 2>&1; then
+    echo "  systemd: kde-apps-light.path enabled"
+else
+    echo "  WARN could not enable kde-apps-light.path (systemctl --user enable --now kde-apps-light.path)"
 fi
 
 echo ""
