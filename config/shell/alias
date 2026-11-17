@@ -15,6 +15,13 @@ if command -v eza >/dev/null 2>&1; then
   alias lx='eza ${_eza_params[*]} -lbhHigUmuSa '
   alias l='eza ${_eza_params[*]}'
 else
+  # GNU ls: colours from LS_COLORS (dircolors also feeds zsh's completion colours)
+  if command -v dircolors >/dev/null 2>&1 && [ -z "${LS_COLORS:-}" ]; then
+    eval "$(dircolors -b)"
+  fi
+  if ls --color=auto -d . >/dev/null 2>&1; then
+    alias ls='ls --color=auto --group-directories-first -h'
+  fi
   alias ll='ls -alF'
   alias la='ls -A'
   alias l='ls'
