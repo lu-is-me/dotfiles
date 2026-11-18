@@ -12,6 +12,7 @@ PID_DIR="${BASE_DIR}/.pids"  # one pid file per running daemon
 CACHE_VFS_DIR="${HOME}/.cache/rclone/vfs"
 CACHE_META_DIR="${HOME}/.cache/rclone/vfsMeta"
 LOG_ROTATE_MAX_BYTES=$((5 * 1024 * 1024)) # rotate mount logs past 5MB
+MOUNT_WAIT_SECS=120 # how long to wait for the FUSE mount to appear
 
 # ------------------------------------------------------------------
 # Ensure required binaries are present
@@ -98,6 +99,48 @@ rotate_log_if_needed() {
 }
 
 # ------------------------------------------------------------------
+# Helper: pid of a running mount daemon for a remote (empty if none)
+# ------------------------------------------------------------------
+daemon_pid_for() {
+  local remote_name="$1"
+  pgrep -o -f "rclone mount ${remote_name}: ${BASE_DIR}/${remote_name} " || true
+}
+
+# ------------------------------------------------------------------
+# Helper: number of cached files still waiting to be uploaded
+# ------------------------------------------------------------------
+pending_uploads() {
+  local remote_name="$1"
+  find "$CACHE_META_DIR" -maxdepth 1 \
+    \( -name "${remote_name}" -o -name "${remote_name}{*}" \) \
+    -exec grep -rl '"Dirty": *true' {} + 2>/dev/null | wc -l
+}
+
+# ------------------------------------------------------------------
+# Helper: wait for the mountpoint to appear while the daemon lives.
+# On startup rclone re-checks every not-yet-uploaded cached file
+# against the remote (subject to --tpslimit) BEFORE the FUSE mount
+# shows up, so with many pending uploads this can take minutes.
+# Returns 0 = mounted, 1 = daemon died, 2 = still starting (timeout)
+# ------------------------------------------------------------------
+wait_for_mount() {
+  local remote_name="$1" pid="$2"
+  local target_dir="${BASE_DIR}/${remote_name}"
+  local waited=0
+  while ((waited < MOUNT_WAIT_SECS)); do
+    mountpoint -q "$target_dir" 2>/dev/null && return 0
+    kill -0 "$pid" 2>/dev/null || return 1
+    if ((waited % 10 == 0)); then
+      echo "  waiting for mount... ${waited}s ($(pending_uploads "$remote_name") cached files pending upload)"
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  mountpoint -q "$target_dir" 2>/dev/null && return 0
+  return 2
+}
+
+# ------------------------------------------------------------------
 # Mount a single remote
 # ------------------------------------------------------------------
 mount_remote() {
@@ -110,6 +153,16 @@ mount_remote() {
   if mountpoint -q "$target_dir" 2>/dev/null; then
     echo "Remote '$remote_name' is already mounted."
     return 0
+  fi
+
+  # A daemon may still be starting up (re-checking pending uploads) –
+  # never start a second one on the same cache
+  local existing_pid
+  existing_pid="$(daemon_pid_for "$remote_name")"
+  if [[ -n "$existing_pid" ]]; then
+    echo "A mount daemon for '$remote_name' is already running (pid $existing_pid) but not mounted yet."
+    echo "It is probably still processing $(pending_uploads "$remote_name") pending uploads – see $log_file"
+    return 1
   fi
 
   # Prevent two simultaneous mount attempts (a lock left behind by a
@@ -160,19 +213,36 @@ mount_remote() {
     return 1
   fi
 
-  # Give rclone a moment to spin up
-  sleep 2
-
-  if mountpoint -q "$target_dir" 2>/dev/null; then
-    echo "Successfully mounted '$remote_name'."
-    pgrep -f "rclone mount ${remote_name}: ${target_dir} " | head -1 >"$pid_file" || true
-    rm -f "$lock_file"
-    return 0
-  else
-    echo "FAILED to mount '$remote_name' – see $log_file for details."
+  local pid
+  pid="$(daemon_pid_for "$remote_name")"
+  if [[ -z "$pid" ]]; then
+    echo "FAILED to mount '$remote_name' – daemon exited immediately, see $log_file for details."
     rm -f "$lock_file"
     return 1
   fi
+  echo "$pid" >"$pid_file"
+
+  local rc=0
+  wait_for_mount "$remote_name" "$pid" || rc=$?
+  rm -f "$lock_file"
+  case $rc in
+  0)
+    echo "Successfully mounted '$remote_name'."
+    return 0
+    ;;
+  1)
+    rm -f "$pid_file"
+    echo "FAILED to mount '$remote_name' – daemon died, see $log_file for details:"
+    grep -E "ERROR|CRITICAL|Fatal" "$log_file" 2>/dev/null | tail -5 || true
+    return 1
+    ;;
+  *)
+    echo "'$remote_name' is still starting after ${MOUNT_WAIT_SECS}s (daemon pid $pid is alive)."
+    echo "rclone is re-checking/uploading $(pending_uploads "$remote_name") pending files before mounting;"
+    echo "it will appear on its own. Follow progress with: tail -f $log_file"
+    return 1
+    ;;
+  esac
 }
 
 # ------------------------------------------------------------------
